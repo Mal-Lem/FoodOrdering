@@ -3,17 +3,37 @@ import { useSession } from 'next-auth/react'
 import { redirect } from 'next/dist/server/api-utils';
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image';
+import InfoBox from '@/components/layout/InfoBox';
+import SuccesBox from '@/components/layout/SuccesBox';
+import Link from 'next/link';
+import Tabs from '@/components/layout/Tabs';
 
 export default function ProfilePage() {
   const session = useSession()
   const [saved,setSaved]= useState(false)
   const [isSaving,setSaving] = useState(false)
+  const [phone,setPhone]= useState('')
+  const [streetAdress,setStreetAdress]= useState('')
+  const [postalCode,setPostalCode]= useState('')
+  const [city,setCity]= useState('')
+  const [country,setCountry]= useState('')
+  const[isAdmin,setIsAdmin]=useState('');
   const [userName,setUserName] = useState('');
   const {status} = session;
 
   useEffect(()=>{
     if(status === 'authenticated'){
       setUserName(session.data.user.name);
+      fetch('/api/profile').then(response=>{
+        response.json().then(data=>{
+          setPhone(data.phone);
+          setStreetAdress(data.streetAdress);
+          setPostalCode(data.postalCode);
+          setCountry(data.country);
+          setCity(data.city);
+          setIsAdmin(data.admin)
+        })
+      })
     }
   },[session,status])
 
@@ -24,7 +44,14 @@ export default function ProfilePage() {
     const response = await fetch('/api/profile',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name:userName}),
+      body: JSON.stringify({
+        name:userName,
+        streetAdress,
+        phone,
+        postalCode,
+        city,
+        country,
+      }),
     })
     setSaving(false)
     if(response.ok){
@@ -52,19 +79,18 @@ export default function ProfilePage() {
 
   return (
     <section className='mt-8'>
-      <h1 className='text-center text-primary text-4xl mb-4'>
-        Profile
-      </h1>
-      <div className='max-w-md mx-auto'>
+      <Tabs isAdmin={isAdmin}/>
+    
+      <div className='max-w-md mx-auto mt-4'>
         {saved && (
-          <h2 className='text-center bg-green-100 rounded-lg border border-green-300 p-4'>Profile saved !</h2>
+          <SuccesBox>Profile saved !</SuccesBox>
         )}
         { isSaving && (
-          <h2 className='text-center bg-blue-100 rounded-lg border border-blue-300 p-4'>Saving...</h2>
+          <InfoBox>Saving...</InfoBox>
         )
 
         }
-        <div className='flex gap-4 items-center'>
+        <div className='flex gap-4 mt-1'>
         <div>
           <div className='p-2 rounded-lg'>
             <Image className='rounded-lg w-full h-full mb-1' src={userImage} width={250} height={250} alt={'avatar'}/>
@@ -75,8 +101,29 @@ export default function ProfilePage() {
           </div>
           </div>
           <form className='grow' onSubmit={handleProfileInfoUpdate}>
+            <label>First and last name</label>
             <input type='text' placeholder='First and last name' value={userName} onChange={ev => setUserName(ev.target.value)}/>
+            <label>Email</label>
             <input type='email' disabled={true} placeholder='email' value={session.data.user.email}/>
+            <label>Phone</label>
+            <input type='tel' placeholder='Phone Number' value={phone} onChange={ev => setPhone(ev.target.value)}/>
+            <label>Street Address</label>
+            <input type='text' placeholder='Street Adress' value={streetAdress} onChange={ev => setStreetAdress(ev.target.value)}/>
+            <div className='flex gap-4'>
+              <div>
+              <label>City</label>
+            <input type='text' placeholder='City' 
+            value={city} onChange={ev => setCity(ev.target.value)}/>
+              </div>
+            <div>
+            <label>Postal Code</label>
+            <input type='text' placeholder='Postal Code' 
+            value={postalCode} onChange={ev => setPostalCode(ev.target.value)}/>
+            </div>
+
+            </div>
+            <label>Country</label>
+            <input type='text' placeholder='Country' value={country} onChange={ev => setCountry(ev.target.value)}/>
             <button type='submit'>Save</button>
           </form>
          </div>
