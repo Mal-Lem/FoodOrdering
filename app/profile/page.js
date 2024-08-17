@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react'
 import Image from 'next/image';
 import InfoBox from '@/components/layout/InfoBox';
 import SuccesBox from '@/components/layout/SuccesBox';
-import Link from 'next/link';
 import Tabs from '@/components/layout/Tabs';
 
 export default function ProfilePage() {
@@ -15,8 +14,9 @@ export default function ProfilePage() {
   const [phone,setPhone]= useState('')
   const [streetAdress,setStreetAdress]= useState('')
   const [postalCode,setPostalCode]= useState('')
-  const [city,setCity]= useState('')
-  const [country,setCountry]= useState('')
+  const [city,setCity]= useState('');
+  const [profileFetched,setProfileFetched]= useState(false);
+  const [country,setCountry]= useState('');
   const[isAdmin,setIsAdmin]=useState('');
   const [userName,setUserName] = useState('');
   const {status} = session;
@@ -32,6 +32,7 @@ export default function ProfilePage() {
           setCountry(data.country);
           setCity(data.city);
           setIsAdmin(data.admin)
+          setProfileFetched(true)
         })
       })
     }
@@ -58,7 +59,7 @@ export default function ProfilePage() {
       setSaved(true);
     }
   }
-  if(status === 'loading'){
+  if(status === 'loading' || !profileFetched){
     return 'Loading...'
   }
   if(status === 'unauthenticated'){
